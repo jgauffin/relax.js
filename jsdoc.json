@@ -1,0 +1,24 @@
+{
+    "plugins": ["typescript", "plugins/markdown"],
+    "source": {
+        "include": ["./src/.*"],
+        "includePattern": ".+\\.(jsx|js|ts|tsx)$"
+    },
+    "opts": {
+        "template": "node_modules/clean-jsdoc-theme",
+        "readme": "./README.md",
+        "destination": "docs/",
+        "theme_opts": {
+            "default_theme": "dark"
+        }
+    },
+    "sourceType": "module",
+    "tags": {
+        "allowUnknownTags": ["optional"]
+    },
+    "markdown": {
+        "hardwrap": false,
+        "idInHeadings": true
+    },
+    "create_style": ".sidebar-title { font-size: 2rem }"
+}

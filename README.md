@@ -1,2 +1,6 @@
-# relax.js
-A set of tools to build SPA applications, but with full control :)
+Dom di dom
+============
+
+There is nothing to see here.
+
+.. pssst .. check the [docs](./docs/ReadMe.md) folder instead.

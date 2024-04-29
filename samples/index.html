@@ -1,0 +1,22 @@
+<html>
+    <script type="module" src="index.esm.js"></script>
+    <body>
+        <script>
+  //          var ws = new WebSocket("ws://localhost:8084");
+//            ws.send('Hello world!');
+
+        </script>
+        <script type="module">
+            import {WebSocketClient} from "./index.esm.js";
+
+            var ws = new WebSocketClient("ws://localhost:8084/ws/");
+            ws.connect();
+            console.log('open')
+            await ws.send('hello world!');
+            console.log('send')
+            var data = await ws.receive();
+            console.log('receive', data);
+
+        </script>
+    </body>
+</html>
