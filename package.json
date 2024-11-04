@@ -2,13 +2,16 @@
     "module": "dist/index.esm.js",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
-    "name": "src",
+    "name": "relax",
     "version": "1.0.0-rc01",
     "description": "A toolkit for easier handling of client side development, no matter if you are using vanilla JS or a SPA framework.",
     "files": [
         "dist/*"
     ],
     "scripts": {
+        "dev": "vite",
+        "buildVite": "vite build",
+        "preview": "vite preview",
         "test": "jest --no-cache",
         "test:watch": "jest --watchAll --no-cache",
         "docs": "typedoc src/index.ts -out ./docs/api",
@@ -47,5 +50,8 @@
         "typedoc": "^0.25.8",
         "typescript": "^5.3.3",
         "ws": "^8.16.0"
+    },
+    "dependencies": {
+        "vite": "^5.4.10"
     }
 }

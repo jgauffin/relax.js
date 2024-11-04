@@ -32,7 +32,7 @@ interface IReaderContext {
     currentObject: any;
 }
 
-interface FormReaderOptions{
+export interface FormReaderOptions{
     prefix?: string;
 
     /**
@@ -56,7 +56,7 @@ interface FormReaderOptions{
 export class FormReader {
     private prefix = 'data';
     constructor(private options?: FormReaderOptions) {
-        if (options?.prefix){
+        if (this.options?.prefix){
             this.prefix = options.prefix;
         }
     }

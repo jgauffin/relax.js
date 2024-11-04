@@ -71,6 +71,17 @@ if (!response.success) {
 }
 ```
 
+# One way binding
+
+to automatically update the data, you can use the FormChangeDetector which uses FormReader internally. Do note, in most cases, it's enough to just read the form once the user presses the submit button.
+One-way binding is more if you need to react on every change in the form, like updating a search filter.
+
+```js
+var myElement = document.getElementById('#mySearchFilterForm');
+var cd = new FormChangeDetector();
+cd.Monitor(myElement, formData => this.search(formData));
+```
+
 # More docs
 
 Navigate the folders and documents here under the docs :)

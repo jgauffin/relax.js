@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Vite + TypeScript</title>
+        <style>
+            .docktarget {
+                border: 2px solid #ddd;
+                position: relative;
+                width: 100px;
+                height: 100px;
+                margin: 20px;
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body>
+        <rlx-table>
+            <columns><column name="userId" title="User id" /></columns>
+            <data type="json"> [{userId = }] </data>
+        </rlx-table>
+        <AddModel signal="addModel(data)">
+            <rlx-form>
+              <rlx-input-text name="name">Attribute name</rlx-input-text>
+              <rlx-input-textbox name="description">Description</rlx-input-text>
+              <rlx-input-select name="dataType" options="dataTypes"></rlx-input-select>
+              <ModelAttributes>
+               
+              </ModelAttributes>
+              <rlx-input-checkbox name="required" value="required">Required</rlx-input-checkbox>
+            </rlx-form>
+        </AddModel>
+
+        <script type="module" src="/src/labb/main.ts"></script>
+        <script type="module" src="/src/controls/index.ts"></script>
+    </body>
+</html>

@@ -1,0 +1,32 @@
+import {Table} from "../controls/collections/Table";
+import {html} from "../dom/"
+export interface ModelAttribute{
+    name :string;
+    dataType: string;
+    isRequired: boolean;
+}
+
+export class ModelAttributes extends HTMLElement{
+    private table: Table;
+    constructor(){
+        super();
+
+        this.innerHTML = html`<rlx-table>
+                  <columns>
+                    <column name="name">Name</column>
+                    <column name="dataType">Data type</column>
+                    <column name="isRequired" titleMapper="booleanToRequired">&nbsp;</column>
+                  </columns>
+                </rlx-table>`;
+
+        this.table = <Table>this.querySelector('rlx-table');
+    }
+
+    booleanToRequired(value: boolean): string{
+        return value ? "required" : "";
+    }
+
+    setData(attributes: ModelAttribute[]){
+        this.table.setData(attributes);
+    }
+}
