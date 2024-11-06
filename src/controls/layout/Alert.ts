@@ -1,3 +1,6 @@
+import { AutoRegister } from "../AutoRegister";
+
+@AutoRegister("rlx-alert")
 export class AlertComponent extends HTMLElement {
     private container: HTMLDivElement;
 
@@ -83,5 +86,3 @@ export class AlertComponent extends HTMLElement {
     }
 
 }
-
-customElements.define('alert-component', AlertComponent);

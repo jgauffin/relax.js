@@ -1,14 +1,15 @@
-import { DataDistributorMixin } from "../mixins/DataDistributor";
+import { AutoRegister } from "../AutoRegister";
+import { ConverterFunc, createConverter, createConverterFromInputType } from "./ValueConverter";
 
-class FormGroupElementBase extends HTMLElement {
-    constructor() {
-      super();
-  
-      // Attach a shadow root to the element
-      this.attachShadow({ mode: 'open' });
-  
-      // Build the initial content of the shadow DOM
-      this.shadowRoot.innerHTML = `
+@AutoRegister('rlx-input')
+export class FormInputElement extends HTMLElement {
+  private input: HTMLInputElement;
+  private valueConverter?: ConverterFunc;
+
+  constructor() {
+    super();
+
+    this.innerHTML = `
         <style>
           :host {
             display: block;
@@ -33,52 +34,67 @@ class FormGroupElementBase extends HTMLElement {
           <input part="form-input" id="form-input" />
         </div>
       `;
+    this.input = this.querySelector('input');
+  }
+
+  // Called when the element is added to the DOM
+  connectedCallback() {
+    this._updateFormGroup();
+  }
+
+  get name(): string {
+    return this.getAttribute("name");
+  }
+
+  set data(value: unknown) {
+    if (!this.valueConverter) {
+      this.valueConverter = createConverter(value);
     }
-  
-    // Called when the element is added to the DOM
-    connectedCallback() {
+    this.input.value = value?.toString() ?? "";
+  }
+
+  set dataType(value: string) {
+    this.valueConverter = createConverter(value);
+  }
+
+  get data(): unknown {
+    if (!this.valueConverter) {
+      const type = this.input.getAttribute("type");
+      this.valueConverter = createConverterFromInputType(type);
+    }
+
+    if (!this.valueConverter) {
+      throw new Error("A value converter has not been specified for input[name=\"" + this.name + "\"]");
+    }
+
+    return this.valueConverter(this.getAttribute("value"));
+  }
+
+
+  // Observed attributes for the custom element
+  static get observedAttributes() {
+    return ['name', 'title', 'type', 'value'];
+  }
+
+  // Handle attribute changes
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
       this._updateFormGroup();
     }
 
-    set data(value: string){
-        
-    }
-  
-    // Observed attributes for the custom element
-    static get observedAttributes() {
-      return ['name', 'title', 'type', 'value'];
-    }
-  
-    // Handle attribute changes
-    attributeChangedCallback(name, oldValue, newValue) {
-      if (oldValue !== newValue) {
-        this._updateFormGroup();
-      }
-    }
-  
-    // Update the form group based on the current attributes
-    _updateFormGroup() {
-      const label = this.shadowRoot.querySelector('#form-label');
-      const input = this.shadowRoot.querySelector('#form-input');
-  
-      // Set label text from the 'title' attribute
-      label.textContent = this.getAttribute('title') || 'Label';
-  
-      // Set input attributes from 'name', 'type', and 'value' attributes
-      input.setAttribute('name', this.getAttribute('name') || '');
-      input.setAttribute('type', this.getAttribute('type') || 'text');
-      input.setAttribute('value', this.getAttribute('value') || '');
-    }
   }
-  
 
-  /**
- * @element rlx-input
- * @attribute {string} custom-attribute - Description of this attribute
- * @attribute {number} another-attribute - Description of another attribute
- */
-  const FormGroupElement = DataDistributorMixin(FormGroupElementBase);
+  // Update the form group based on the current attributes
+  _updateFormGroup() {
+    const label = this.shadowRoot.querySelector('#form-label');
+    const input = this.shadowRoot.querySelector('#form-input');
 
-  // Define the custom element
-  customElements.define('rlx-input', FormGroupElement);
-  
+    // Set label text from the 'title' attribute
+    label.textContent = this.getAttribute('title') || 'Label';
+
+    // Set input attributes from 'name', 'type', and 'value' attributes
+    input.setAttribute('name', this.getAttribute('name') || '');
+    input.setAttribute('type', this.getAttribute('type') || 'text');
+    input.setAttribute('value', this.getAttribute('value') || '');
+  }
+}

@@ -1,4 +1,8 @@
-class ShadowValidatedForm extends HTMLFormElement {
+import { AutoRegister } from "../AutoRegister";
+import { DataDistributorMixin } from "../mixins/DataDistributor";
+
+@AutoRegister('rlx-form', {mixins: [DataDistributorMixin]})
+export class ShadowValidatedForm extends HTMLFormElement {
     private summary = document.createElement('div');
 
     constructor() {
@@ -114,8 +118,3 @@ class ShadowValidatedForm extends HTMLFormElement {
         });
     }
 }
-
-// Define the custom form element
-customElements.define('rlx-form', ShadowValidatedForm, {
-    extends: 'form'
-});

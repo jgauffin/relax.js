@@ -1,3 +1,6 @@
+import { AutoRegister } from "../AutoRegister";
+
+@AutoRegister('rlx-pane')
 export class Pane extends HTMLDivElement {
     private titleElement: HTMLHeadingElement;
     private bodyContainer: HTMLDivElement;
@@ -47,6 +50,3 @@ export class Pane extends HTMLDivElement {
         });
     }
 }
-
-// Define the custom element, extending HTMLDivElement
-customElements.define('rlx-pane', Pane, { extends: 'div' });

@@ -1,4 +1,5 @@
 import { ColumnDefinition, Table } from "../controls/collections/Table";
+import "./AddModel";
 
 // Define some columns
 const columns: ColumnDefinition[] = [

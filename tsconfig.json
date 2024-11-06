@@ -2,7 +2,9 @@
   "compilerOptions": {
     "declaration": true,
     "module": "commonjs",
-    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true, // Optional: Only needed if using reflection-based libraries
+   "esModuleInterop": true,
     "target": "es6",
     "moduleResolution": "node",
     "sourceMap": true,
