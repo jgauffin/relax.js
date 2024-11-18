@@ -28,6 +28,7 @@ export class ModelAttributes extends HTMLElement {
                 <rlx-form-manager>
                     <rlx-input name="name">Name</rlx-input>
                     <rlx-input-autocomplete name="dataType">Data type</rlx-input-autocomplete>
+                    <rlx-input-checkbox name="required">Is required</rlx-input-checkbox>
     </rlx-form-manager>
     </form>
     </dialog>

@@ -6,6 +6,50 @@ type EventCallback = (...args: any[]) => void;
 // Symbol used for marking subscriber methods
 const SUBSCRIBER_METADATA_KEY = Symbol('dom-pubsub-subscriber');
 
+
+interface MessageDefinition {
+    topic: string;
+    description?: string;
+    schema?: any; // JSON schema or validation schema
+}
+
+const SignalRegistry = new Map<string, MessageDefinition>();
+
+function validateMessage(payload: any, schema: any): boolean {
+    // Basic schema validation (extend with libraries like AJV for JSON schema validation)
+    for (const key in schema) {
+        if (schema[key].required && !(key in payload)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+export function Signal(topic: string, description?: string, schema?: any): MethodDecorator {
+    return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+        // Register the message in the global registry
+        SignalRegistry.set(propertyKey.toString(), {
+            topic,
+            description,
+            schema,
+        });
+
+        // Keep the original method behavior
+        const originalMethod = descriptor.value;
+        descriptor.value = function (...args: any[]) {
+            // Optional: You can validate the arguments against the schema here
+            if (schema) {
+                const isValid = validateMessage(args[0], schema);
+                if (!isValid) {
+                    throw new Error(`Invalid message payload for topic: ${topic}`);
+                }
+            }
+            return originalMethod.apply(this, args);
+        };
+    };
+}
+
+
 // Utility function to find elements with subscriber methods
 function findSubscribers(element: HTMLElement): Array<{ element: HTMLElement; method: EventCallback }> {
     const subscribers: Array<{ element: HTMLElement; method: EventCallback }> = [];

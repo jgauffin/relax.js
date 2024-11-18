@@ -1,5 +1,11 @@
 import { AutoRegister } from "../AutoRegister";
 
+@Signal
+export class OpenDialog{
+    constructor(name: string){}
+}
+
+export class 
 @AutoRegister('rlx-dialog')
 export class RelaxDialog extends HTMLElement {
     private dialog: HTMLDialogElement;
