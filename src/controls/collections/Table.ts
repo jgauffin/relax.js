@@ -1,4 +1,5 @@
 import { BaseComponent } from "../../dom/webcomponents/BaseComponent";
+import { AutoRegister } from "../AutoRegister";
 
 interface ColumnDefinition {
     /**
@@ -13,7 +14,8 @@ interface ColumnDefinition {
     property: string;
 }
 
-class Table extends BaseComponent {
+@AutoRegister('rlx-table')
+export class Table extends BaseComponent {
     private table: HTMLTableElement = document.createElement('table');
     private tBody: HTMLTableSectionElement;
     private pages: Map<number, Record<string, unknown>[]> = new Map();
@@ -72,7 +74,7 @@ class Table extends BaseComponent {
         }
         this.tBody.innerHTML = '';
 
-        data.forEach((x) => {
+        data.forEach((x: Record<string, unknown>) => {
             const row = document.createElement('tr');
             for (const prop in x) {
                 const td = document.createElement('td');
@@ -141,5 +143,83 @@ class Table extends BaseComponent {
     }
 }
 
-customElements.define('rlx-table', Table);
-export { Table, ColumnDefinition };
+@AutoRegister('rlx-columns')
+export class ColumnsElement extends HTMLElement {
+    private observer: MutationObserver;
+  
+    constructor() {
+      super();
+  
+      this.observer = new MutationObserver(() => {
+        this.updateColumns();
+      });
+    }
+  
+    connectedCallback() {
+      this.observer.observe(this, { childList: true, subtree: false });
+      this.updateColumns();
+    }
+  
+    disconnectedCallback() {
+      this.observer.disconnect();
+    }
+  
+    get columns(): ColumnElement[] {
+      return Array.from(this.querySelectorAll('column'));
+    }
+  
+    set columns(value: ColumnElement[]) {
+      this.innerHTML = '';
+      value.forEach(column => this.appendChild(column));
+      this.updateColumns();
+    }
+  
+    private updateColumns() {
+      console.log('Columns updated:', this.columns);
+    }
+  }
+
+
+
+@AutoRegister('rlx-column')
+export class ColumnElement extends HTMLElement {
+  static get observedAttributes() {
+    return ['name', 'transformer'];
+  }
+
+  get name(): string | null {
+    return this.getAttribute('name');
+  }
+
+  set name(value: string | null) {
+    if (value) {
+      this.setAttribute('name', value);
+    } else {
+      this.removeAttribute('name');
+    }
+  }
+
+  get transformer(): string | null {
+    return this.getAttribute('transformer');
+  }
+
+  set transformer(value: string | null) {
+    if (value) {
+      this.setAttribute('transformer', value);
+    } else {
+      this.removeAttribute('transformer');
+    }
+  }
+
+  get displayName(): string {
+    return this.innerText;
+  }
+
+  set displayName(value: string) {
+    this.innerText = value;
+  }
+
+  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
+    console.log(`Attribute changed: ${name}, Old: ${oldValue}, New: ${newValue}`);
+  }
+}

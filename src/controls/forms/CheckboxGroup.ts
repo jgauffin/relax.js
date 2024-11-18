@@ -1,4 +1,4 @@
-class CheckboxGroupComponent extends HTMLElement {
+export class CheckboxGroupComponent extends HTMLElement {
     private data: Record<string, unknown> = {};
     private layout: 'inline' | 'block' = 'block'; // Default layout
     private checkedValues: unknown[] = []; // Array to store checked values

@@ -1,4 +1,4 @@
-import { ConverterFunc, createConverter, createConverterFromInputType } from "../forms/ValueConverter";
+import { ConverterFunc, createConverterFromValue, createConverterFromInputType } from "../forms/ValueConverter";
 import { Constructor } from "./Constructor";
 
 interface ElementWithName extends HTMLElement{
@@ -25,13 +25,13 @@ export function ValueHandlerMixin<TBase extends Constructor<ElementWithName>>(
             }
             set data(value: unknown) {
                 if (!this.valueConverter) {
-                    this.valueConverter = createConverter(value);
+                    this.valueConverter = createConverterFromValue(value);
                 }
                 this.input.value = value?.toString() ?? "";
             }
 
             set dataType(value: string) {
-                this.valueConverter = createConverter(value);
+                this.valueConverter = createConverterFromValue(value);
             }
 
             get data(): unknown {

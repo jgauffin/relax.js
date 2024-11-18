@@ -1,43 +1,54 @@
-class AutocompleteInput extends HTMLElement {
-    private inputElement: HTMLInputElement;
+import { AutoRegister } from "../AutoRegister";
+import { copyInputAttributes } from "./AttributeHelper";
+
+/**
+ * 
+ */
+@AutoRegister('rlx-input-autocomplete')
+export class AutocompleteInput extends HTMLElement {
+    private input: HTMLInputElement;
+    private label: HTMLLabelElement;
     private dataListElement: HTMLDataListElement;
     private mustMatch: boolean;
     private valueMap: Map<string, unknown> = new Map();
 
     constructor() {
         super();
+        const text = this.innerText;
+        this.innerHTML = `
+        <div class="form-group">
+          <label for="__name__"></label>
+          <input type="text" name="__name__" />
+        </div>
+      `;
 
-        const labelElement = document.createElement('label');
-        labelElement.textContent = this.getAttribute('title') || 'Enter text:';
-        labelElement.htmlFor = 'autocomplete-input';
-        this.appendChild(labelElement);
+        this.label = this.querySelector('label');
+        this.input = this.querySelector('input');
+        this.label.innerText = text;
 
-        this.inputElement = document.createElement('input');
-        this.inputElement.type = 'text';
-        this.inputElement.id = 'autocomplete-input';
-        this.inputElement.name = this.getAttribute('name') || 'input';
-        this.inputElement.setAttribute('list', 'autocomplete-options');
-        this.appendChild(this.inputElement);
 
         this.dataListElement = document.createElement('datalist');
-        this.dataListElement.id = 'autocomplete-options';
+        this.dataListElement.id = this.input.name + '-options';
         this.appendChild(this.dataListElement);
 
         this.mustMatch = this.hasAttribute('mustMatch');
 
+        copyInputAttributes(this, this.input);
+        this.input.setAttribute('list', this.input.name + '-options');
+
         const selectedValue = this.getAttribute('selectedValue');
         if (selectedValue) {
-            this.inputElement.value = selectedValue;
+            this.input.value = selectedValue;
         }
 
-        this.inputElement.addEventListener('blur', () => this.validateInput());
+        this.input.addEventListener('blur', () => this.validateInput());
     }
 
     private validateInput() {
         if (this.mustMatch) {
-            const entry = this.valueMap.get(this.inputElement.value);
+            const entry = this.valueMap.get(this.input.value);
             if (!entry){
-                this.inputElement.setCustomValidity('You must select one of the choices');
+                this.input.setCustomValidity('You must select one of the choices');
             }
         }
     }
@@ -51,7 +62,7 @@ class AutocompleteInput extends HTMLElement {
             this.valueMap.set(option.value, item);
             this.dataListElement.appendChild(option);
         });
-        this.inputElement.value = data.toString();
+        this.input.value = data.toString();
     }
 
     static get observedAttributes() {
@@ -59,19 +70,18 @@ class AutocompleteInput extends HTMLElement {
     }
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-        if (name === 'name') {
-            this.inputElement.name = newValue;
-        } else if (name === 'title') {
+        if (name in this.input){
+            this.input.setAttribute(name, newValue);
+            return;
+        }
+
+        if (name === 'title') {
             const labelElement = this.querySelector(
                 'label'
             ) as HTMLLabelElement;
             labelElement.textContent = newValue;
-        } else if (name === 'selected') {
-            this.inputElement.value = newValue;
         } else if (name === 'mustMatch') {
             this.mustMatch = newValue !== null;
         }
     }
 }
-
-customElements.define('rlx-form-text', AutocompleteInput);

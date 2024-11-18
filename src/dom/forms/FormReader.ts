@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { assignValue } from "../objects/assignValue";
+import { ConverterFunc } from '../../controls/forms/ValueConverter';
+import { assignValue } from '../../objects/assignValue';
 
 export interface IFormReader {
     /**
      * Read entire form.
-     * 
+     *
      * @param elemOrName Form element or element name (either id, form name or relaxed name).
      */
     read(elemOrName: HTMLElement | string): Record<string, unknown>;
@@ -32,31 +33,103 @@ interface IReaderContext {
     currentObject: any;
 }
 
-export interface FormReaderOptions{
+export interface FormReaderOptions {
     prefix?: string;
 
     /**
      * Treat value as a number.
      */
-    disableBinaryCheckbox?: boolean,
+    disableBinaryCheckbox?: boolean;
 
     /**
      * Treat value as a number.
      */
-    disableBinaryRadioButton?: boolean
+    disableBinaryRadioButton?: boolean;
+}
+
+export function readDataValue(
+    element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+): any | undefined {
+    if (typeof (element as any).getData === 'function') {
+        return (element as any).getData();
+    }
+
+    // for those scenarios whent the input is tagged with a dataType 
+    // but is not one of this libraries custom implementations.
+    return getDataConverter(element)(element.value);
+}
+
+export function getDataConverter(element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): ConverterFunc{
+    if (typeof (element as any).dataType === 'string') {
+        return (element as any).dataType;
+    }
+
+        return str => str;
+}
+
+export function readData(rootElement: HTMLElement): Record<string, any> {
+    const data: Record<string, any> = {};
+
+    const formElements = rootElement.querySelectorAll<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >('input[name], select[name], textarea[name]');
+
+    formElements.forEach((element) => {
+        const name = element.name;
+        if (!name) return;
+
+        let value: any;
+        const value2 = readDataValue(element);
+        
+
+        if (element instanceof HTMLInputElement) {
+            if (element.type === 'checkbox' && !element.checked) {
+                return;
+            } else if (element.type === 'radio' && !element.checked) {
+                return;
+            }
+            value = value2 ?? element.value;
+        } else if (element instanceof HTMLSelectElement) {
+            if (element.multiple) {
+
+                value = Array.from(element.selectedOptions).map(
+                    (option) => option.value
+                );
+            } else {
+                value = element.value;
+            }
+        } else if (element instanceof HTMLTextAreaElement) {
+            value = value2 ?? element.value;
+        }
+
+        if (value !== undefined) {
+            value = getDataConverter(element)(value);
+            if (data[name] !== undefined) {
+                if (Array.isArray(data[name])) {
+                    data[name].push(value);
+                } else {
+                    data[name] = [data[name], value];
+                }
+            } else {
+                data[name] = value;
+            }
+        }
+    });
+
+    return data;
 }
 
 /**
  * The form reader are used to read form elements into an object.
- * 
+ *
  * For this to work, the name attribute in forms need to follow specific rules.
- * 
- * For instance, the name 
+ *
+ * For instance, the name
  */
 export class FormReader {
     private prefix = 'data';
     constructor(private options?: FormReaderOptions) {
-        if (this.options?.prefix){
+        if (this.options?.prefix) {
             this.prefix = options.prefix;
         }
     }
@@ -64,8 +137,12 @@ export class FormReader {
     public read(elemOrName: HTMLElement | string): any {
         let container: HTMLElement;
 
-        if (typeof elemOrName === "string") {
-            container = <HTMLElement>document.querySelector(`#${elemOrName},[${this.prefix}-name="${elemOrName}"],[name="${elemOrName}"]`);
+        if (typeof elemOrName === 'string') {
+            container = <HTMLElement>(
+                document.querySelector(
+                    `#${elemOrName},[${this.prefix}-name="${elemOrName}"],[name="${elemOrName}"]`
+                )
+            );
             if (!container) {
                 throw new Error("Failed to locate '" + elemOrName + "'.");
             }
@@ -75,12 +152,15 @@ export class FormReader {
 
         const motherObject: any = {};
         for (let i = 0; i < container.childElementCount; i++) {
-            this.visitElement({
-                currentObject: motherObject,
-                path: [],
-                parentElements: [],
-                parents: []
-            }, <HTMLElement>container.children[i])
+            this.visitElement(
+                {
+                    currentObject: motherObject,
+                    path: [],
+                    parentElements: [],
+                    parents: []
+                },
+                <HTMLElement>container.children[i]
+            );
         }
 
         return motherObject;
@@ -93,7 +173,6 @@ export class FormReader {
         if (name != null) {
             childContext = this.buildNewContextForNonInputName(name, context);
         } else if (this.isInputElement(element)) {
-
             name = this.getInputName(element);
             if (name) {
                 const canRead = this.canRead(element);
@@ -117,20 +196,22 @@ export class FormReader {
         }
 
         for (let i = 0; i < element.childElementCount; i++) {
-            this.visitElement(childContext, <HTMLElement>element.children[i])
+            this.visitElement(childContext, <HTMLElement>element.children[i]);
         }
-
     }
 
     /**
      * Values should only be read form checkboxes/radio buttons when they have been checked.
      * @param element Element to check
-     * @returns 
+     * @returns
      */
     private canRead(element: HTMLElement) {
         const inputType = element.getAttribute('type')?.toLowerCase();
         if (inputType == 'checkbox' || inputType == 'radio') {
-            return (element.hasAttribute("checked")) || element.hasAttribute("selected");
+            return (
+                element.hasAttribute('checked') ||
+                element.hasAttribute('selected')
+            );
         }
 
         return true;
@@ -141,7 +222,10 @@ export class FormReader {
      * @param name Name to build from. Can contain dot and array notation.
      * @param parentContext Context for the parent object.
      */
-    private buildNewContextForNonInputName(name: string, parentContext: IReaderContext): IReaderContext {
+    private buildNewContextForNonInputName(
+        name: string,
+        parentContext: IReaderContext
+    ): IReaderContext {
         const childContext: IReaderContext = {
             currentObject: parentContext.currentObject,
             parentElements: [...parentContext.parentElements],
@@ -150,9 +234,14 @@ export class FormReader {
         };
 
         const nameParts = name.split('.');
-        nameParts.forEach(key => {
+        nameParts.forEach((key) => {
             if (key.at(-1) !== ']') {
-                if (!Object.prototype.hasOwnProperty.call(childContext.currentObject, key)) {
+                if (
+                    !Object.prototype.hasOwnProperty.call(
+                        childContext.currentObject,
+                        key
+                    )
+                ) {
                     childContext.currentObject[key] = {};
                     childContext.parents.push(childContext.currentObject);
                 }
@@ -167,7 +256,10 @@ export class FormReader {
 
             // Got an index specified.
             if (startSquareBracketPos < key.length - 2) {
-                const indexStr = key.substring(startSquareBracketPos + 1, key.length - 1);
+                const indexStr = key.substring(
+                    startSquareBracketPos + 1,
+                    key.length - 1
+                );
                 arrayIndex = +indexStr;
             }
 
@@ -175,7 +267,12 @@ export class FormReader {
             key = key.substring(0, startSquareBracketPos);
 
             // Create array if items havent been appended before.
-            if (!Object.prototype.hasOwnProperty.call(childContext.currentObject, key)) {
+            if (
+                !Object.prototype.hasOwnProperty.call(
+                    childContext.currentObject,
+                    key
+                )
+            ) {
                 childContext.currentObject[key] = [];
                 childContext.path.push(`${key}`);
                 childContext.parents.push(childContext.currentObject[key]);
@@ -188,13 +285,16 @@ export class FormReader {
             childContext.path.push(`[${arrayIndex}]`);
             childContext.parents.push(childContext.currentObject[key]);
             childContext.currentObject[key][arrayIndex] = {};
-            childContext.currentObject = childContext.currentObject[key][arrayIndex];
+            childContext.currentObject =
+                childContext.currentObject[key][arrayIndex];
         });
 
         return childContext;
     }
 
-    private getValue(el: HTMLElement): number | string | boolean | null | any[] {
+    private getValue(
+        el: HTMLElement
+    ): number | string | boolean | null | any[] {
         let valueStr: string | null = '';
 
         if (el.tagName == 'SELECT') {
@@ -203,7 +303,7 @@ export class FormReader {
                 return null;
             }
 
-            if (el.hasAttribute("multiple")) {
+            if (el.hasAttribute('multiple')) {
                 const allValues = [];
                 for (let i = 0; i < el.childElementCount; i++) {
                     const childElement = <HTMLOptionElement>el.children[i];
@@ -215,24 +315,25 @@ export class FormReader {
                 }
 
                 return allValues;
-            }
-            else {
+            } else {
                 valueStr = sel.options[sel.selectedIndex].value;
             }
-
         } else if (el.tagName == 'TEXTAREA') {
-            valueStr = el.getAttribute("value") || "";
+            valueStr = el.getAttribute('value') || '';
         } else if (el.tagName == 'INPUT') {
             const input = <HTMLInputElement>el;
             const type = input.type;
-            if (type == 'checkbox' || type == "radio") {
-                if (input.value == 'true'){
+            if (type == 'checkbox' || type == 'radio') {
+                if (input.value == 'true') {
                     return input.checked;
-                }else if (input.value == 'false'){
+                } else if (input.value == 'false') {
                     return input.checked ? false : null;
                 }
 
-                valueStr = input.checked || input.hasAttribute("selected") ? input.value : null;
+                valueStr =
+                    input.checked || input.hasAttribute('selected')
+                        ? input.value
+                        : null;
             } else {
                 valueStr = input.value;
             }
@@ -247,7 +348,7 @@ export class FormReader {
 
     private parseValue(valueStr: string): number | string | boolean {
         if (!valueStr) {
-            throw new Error("not specified");
+            throw new Error('not specified');
         }
 
         if (!isNaN(<any>valueStr) && valueStr[0] != '0') {
@@ -262,30 +363,32 @@ export class FormReader {
     }
     /**
      * Tries to retreive a name from a NON-input element.
-     * 
+     *
      * These names are used to define child objects for all children of the current HTML element.
-     * 
+     *
      * The id attribute is not used since it can be defined just to be able to control the HTML.
-     * 
+     *
      * @param el Element to check for name
-     * @returns 
+     * @returns
      */
     private getNonInputName(el: HTMLElement): string | null {
         if (this.isInputElement(el)) {
             return null;
         }
 
-        const name = el.getAttribute(`${this.prefix}-name`) || el.getAttribute(`${this.prefix}-collection`);
+        const name =
+            el.getAttribute(`${this.prefix}-name`) ||
+            el.getAttribute(`${this.prefix}-collection`);
         return name;
     }
 
     /**
      * Tries to retreive a name from a HTML input element.
-     * 
+     *
      * These are names for input elements.
-     * 
+     *
      * @param el Element to check for name
-     * @returns 
+     * @returns
      */
     private getInputName(el: HTMLElement): string | null {
         const name = el.getAttribute('name');
@@ -293,6 +396,10 @@ export class FormReader {
     }
 
     private isInputElement(el: HTMLElement): boolean {
-        return el.tagName == 'INPUT' || el.tagName == 'SELECT' || el.tagName == 'TEXTAREA';
+        return (
+            el.tagName == 'INPUT' ||
+            el.tagName == 'SELECT' ||
+            el.tagName == 'TEXTAREA'
+        );
     }
 }

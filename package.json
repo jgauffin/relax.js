@@ -53,6 +53,7 @@
         "ws": "^8.16.0"
     },
     "dependencies": {
+        "reflect-metadata": "^0.2.2",
         "vite": "^5.4.10"
     }
 }

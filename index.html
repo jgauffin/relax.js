@@ -13,26 +13,73 @@
                 margin: 20px;
                 display: inline-block;
             }
+
+            dialog::backdrop {
+                background: #990000;
+            }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: var(--form-group-margin-bottom, 1em);
+            }
+            label {
+                font-weight: var(--form-label-font-weight, bold);
+                margin-bottom: var(--form-label-margin-bottom, 0.5em);
+            }
+            input,
+            textarea,
+            select {
+                padding: var(--form-input-padding, 0.5em);
+                border: var(--form-input-border, 1px solid #ccc);
+                border-radius: var(--form-input-border-radius, 4px);
+            }
         </style>
     </head>
+
     <body>
         <rlx-table>
-            <columns><column name="userId" title="User id" /></columns>
+            <columns>
+                <column name="userId" title="User id" />
+            </columns>
             <data type="json"> [{userId = 3}] </data>
         </rlx-table>
-        <AddModel signal="addModel(data)">
-            <rlx-form>
-              <rlx-input-text name="name">Attribute name</rlx-input-text>
-              <rlx-input-textbox name="description">Description</rlx-input-text>
-              <rlx-input-select name="dataType" options="dataTypes"></rlx-input-select>
-              <ModelAttributes>
-               
-              </ModelAttributes>
-              <rlx-input-checkbox name="required" value="required">Required</rlx-input-checkbox>
-            </rlx-form>
-        </AddModel>
 
         <script type="module" src="/src/labb/main.ts"></script>
         <script type="module" src="/src/controls/index.ts"></script>
+        <rlx-dialog open id="myDialog">
+            <add-model signal="addModel(data)">
+                <form>
+                    <rlx-form-manager autovalidate usesummary>
+                        <rlx-input
+                            name="name"
+                            required
+                            length="5-40"
+                            minlength="5"
+                            >Attribute name</rlx-input
+                        >
+                        <rlx-input-stext name="description" length="5-512"
+                            >Description</rlx-input-stext
+                        >
+                        <rlx-input-toggle name="required"
+                            >Required</rlx-input-toggle
+                        >
+                        <rlx-input-autocomplete
+                            name="dataType"
+                            options="dataTypes"
+                            mustSelectOption
+                            >Data type</rlx-input-autocomplete
+                        >
+
+                        <ModelAttributes> </ModelAttributes>
+
+                        <button>Save</button>
+                    </rlx-form-manager>
+                </form>
+            </add-model>
+        </rlx-dialog>
+        <button onclick="document.getElementById('myDialog').open()">
+            Open Dialog
+        </button>
     </body>
 </html>
